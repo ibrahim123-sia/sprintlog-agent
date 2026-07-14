@@ -1,0 +1,10 @@
+Subject:	{{	team_name	}}	EOD	Report	{{	date	}}
+Hi	{{	recipient_name	}},
+Start	Time:	{{	start_time	}}
+End	Time:	{{	end_time	}}
+Total	Hours:	{{	total_hours	}}
+Completed	Tasks
+{{	developer_name	}}
+{{	completed_tasks	}}
+Best	Regards,
+{{	team_name	}}
