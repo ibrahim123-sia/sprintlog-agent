@@ -1,3 +1,4 @@
+import logging
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
 from app.database import SessionLocal
@@ -7,38 +8,68 @@ from app.services.github_service import collect_daily_activity
 from app.services.email_service import render_email, send_email
 from datetime import datetime
 
+logger = logging.getLogger(__name__)
+
 scheduler = BackgroundScheduler()
 report_graph = build_graph()
 
 
-def run_report_for_user(user_id: int):
-    """The actual job that runs for a single user at their scheduled time."""
+def run_report_for_user(user_id: int) -> dict:
+    """The actual job that runs for a single user at their scheduled time.
+
+    Returns a status dict instead of raising, so a bad Gemini/GitHub/SMTP
+    call for one user can't silently kill the scheduler job or crash the
+    manual-trigger endpoint — the failure is logged and recorded as a
+    Report row instead of just vanishing.
+    """
     db = SessionLocal()
     try:
         user = db.query(User).filter(User.id == user_id).first()
         if not user or user.active != "true":
-            return
+            return {"status": "skipped", "reason": "user not found or inactive"}
 
-        activity = collect_daily_activity(user.repos, user.github_username, user.github_token)
+        try:
+            activity = collect_daily_activity(user.repos, user.github_username, user.github_token)
+        except Exception:
+            logger.exception("EOD report failed for user_id=%s while collecting GitHub activity", user_id)
+            db.add(Report(
+                user_id=user.id,
+                summary_text="Report generation failed while collecting GitHub activity — see server logs.",
+                sent_successfully="false"
+            ))
+            db.commit()
+            return {"status": "error"}
 
         if activity["total_commits"] == 0:
-            return  # nothing to report today
+            return {"status": "skipped", "reason": "no commits today"}
 
-        result = report_graph.invoke({"activity": activity, "tone": user.tone})
-        summary = result["final_summary"]  # bullet points only — Completed Tasks section
+        try:
+            result = report_graph.invoke({"activity": activity, "tone": user.tone})
+            summary = result["final_summary"]  # bullet points only — Completed Tasks section
 
-        subject, body = render_email(
-            team_name=user.team_name,
-            recipient_name=user.recipient_name,
-            date="{d.day}-{d.month}-{d.year}".format(d=datetime.now()),
-            developer_name=user.name,
-            completed_tasks=summary,
-            start_time=user.default_start_time,
-            end_time=user.default_end_time,
-            total_hours=user.default_total_hours
-        )
+            subject, body = render_email(
+                team_name=user.team_name,
+                recipient_name=user.recipient_name,
+                date="{d.day}-{d.month}-{d.year}".format(d=datetime.now()),
+                developer_name=user.name,
+                completed_tasks=summary,
+                start_time=user.default_start_time,
+                end_time=user.default_end_time,
+                total_hours=user.default_total_hours
+            )
 
-        send_email(user.email_to, subject, body)
+            send_email(user.email_to, subject, body)
+        except Exception:
+            logger.exception("EOD report failed for user_id=%s", user_id)
+            db.add(Report(
+                user_id=user.id,
+                summary_text="Report generation/send failed — see server logs.",
+                commit_count=activity["total_commits"],
+                repos_touched=list(activity["repos"].keys()),
+                sent_successfully="false"
+            ))
+            db.commit()
+            return {"status": "error"}
 
         db.add(Report(
             user_id=user.id,
@@ -48,6 +79,7 @@ def run_report_for_user(user_id: int):
             sent_successfully="true"
         ))
         db.commit()
+        return {"status": "sent"}
     finally:
         db.close()
 

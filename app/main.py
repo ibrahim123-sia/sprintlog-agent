@@ -1,7 +1,10 @@
+import logging
 from fastapi import FastAPI
 from app.database import engine, Base
 from app.routes import user as users, report as reports
 from app.services.scheduler_service import scheduler,load_all_user_schedules
+
+logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
 
 Base.metadata.create_all(bind=engine)
 

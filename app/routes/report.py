@@ -13,8 +13,7 @@ def trigger_now(user_id: int, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
         raise HTTPException(404, "User not found")
-    run_report_for_user(user_id)
-    return {"status": "triggered"}
+    return run_report_for_user(user_id)
 
 
 @router.get("/history/{user_id}")
