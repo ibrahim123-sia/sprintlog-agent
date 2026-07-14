@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from app.database import engine, Base
-from app.routes import users,reports
+from app.routes import user as users, report as reports
 from app.services.scheduler_service import scheduler,load_all_user_schedules
 
 Base.metadata.create_all(bind=engine)

@@ -20,7 +20,8 @@ def seed_user():
 
         user = User(
            name="Syed Ibrahim",
-            email_to="pm@company.com",
+            email_to="aryanaj2255@gmail.com",
+            recipient_name="Aryan",
             github_username=settings.github_username,
             github_token=settings.github_token,
             repos=["ibrahim123-sia/sprintlog"], # apne repos daal do
