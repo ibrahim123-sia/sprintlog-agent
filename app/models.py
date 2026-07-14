@@ -2,21 +2,19 @@ from	sqlalchemy	import	Column,	Integer,	String,	Text,	DateTime,	ForeignKey,	JSON
 from	sqlalchemy.orm	import	relationship
 from	datetime	import	datetime
 from	app.database	import	Base
+
 class	User(Base):
     __tablename__	=	"users"
     id	=	Column(Integer,	primary_key=True)
     name	=	Column(String,	nullable=False)
     email_to	=	Column(String,	nullable=False)						
-    #	PM	ka	email
     github_username	=	Column(String,	nullable=False)
     github_token	=	Column(String,	nullable=False)
     repos	=	Column(JSON,	default=list)														
-    #	["org/repo1",	"org/repo2"]
     schedule_hour	=	Column(Integer,	default=18)
     schedule_minute	=	Column(Integer,	default=0)
     timezone	=	Column(String,	default="Asia/Karachi")
     tone	=	Column(String,	default="professional")				
-    #	professional	/	casual	/	concise
     active	=	Column(String,	default="true")
     created_at	=	Column(DateTime,	default=datetime.utcnow)
     reports	=	relationship("Report",	back_populates="user")
