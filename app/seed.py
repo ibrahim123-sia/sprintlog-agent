@@ -2,7 +2,7 @@
 Seed script — creates the initial user for Sprintlog.
 Run this once after setting up the database: python seed.py
 """
-
+from app.config import settings
 from app.database import SessionLocal, Base, engine
 from app.models import User
 from app.services.scheduler_service import schedule_user
@@ -19,11 +19,11 @@ def seed_user():
             return existing
 
         user = User(
-            name="Syed Ibrahim",
-            email_to="pm@company.com",          # apna PM ka email daal do
-            github_username="ibrahim123-sia",
-            github_token="ghp_xxxxxxxxxxxx",     # apna GitHub token daal do
-            repos=["ibrahim123-sia/sprintlog"],  # apne repos daal do
+           name="Syed Ibrahim",
+            email_to="pm@company.com",
+            github_username=settings.github_username,
+            github_token=settings.github_token,
+            repos=["ibrahim123-sia/sprintlog"], # apne repos daal do
             schedule_hour=18,
             schedule_minute=0,
             timezone="Asia/Karachi",
