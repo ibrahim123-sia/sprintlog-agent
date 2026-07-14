@@ -30,13 +30,14 @@ Each user has their own configurable GitHub repos, schedule time, and tone — t
 ## Project structure
 
 ```
-sprintlog/
+sprintlog-agent/
 ├── app/
 │   ├── main.py
 │   ├── config.py
 │   ├── database.py
 │   ├── models.py
-│   ├── schemas.py
+│   ├── schema.py
+│   ├── seed.py
 │   ├── services/
 │   │   ├── github_service.py
 │   │   ├── email_service.py
@@ -48,44 +49,56 @@ sprintlog/
 │   │   └── writer_agent.py
 │   ├── templates/
 │   │   └── eod_email.txt
-│   └── routes/
-│       ├── users.py
-│       └── reports.py
-├── requirements.txt
-├── .env.example
+│   ├── routes/
+│   │   ├── user.py
+│   │   └── report.py
+│   ├── requirements.txt
+│   ├── .env.example
+│   └── .env            (create this, not committed)
 └── README.md
 ```
 
 ## Setup
 
+All commands below are run from the repo root (`sprintlog-agent/`), not from inside `app/`.
+
 1. Clone the repo and install dependencies:
    ```bash
-   pip install -r requirements.txt
+   pip install -r app/requirements.txt
    ```
 
-2. Copy `.env.example` to `.env` and fill in your values:
+2. Copy `app/.env.example` to `app/.env` and fill in your values:
    ```
    DATABASE_URL=your-neon-connection-string
-   GOOGLE_API_KEY=your-gemini-api-key
+   GEMINI_API_KEY=your-gemini-api-key
    SMTP_HOST=smtp.gmail.com
    SMTP_PORT=587
    SMTP_USER=your-email
    SMTP_PASSWORD=your-app-password
    SECRET_KEY=any-random-string
+   GITHUB_TOKEN=ghp_xxxxx
+   GITHUB_USERNAME=your-github-username
    ```
+   (`app/.env` is used regardless of your current directory — `config.py` resolves it relative to its own location.)
 
 3. Run the server:
    ```bash
    uvicorn app.main:app --reload
    ```
+   This also creates the database tables on first run.
 
-4. Create a user:
+4. Create a user — either via the seed script (edit the placeholder values in `app/seed.py` first):
+   ```bash
+   python -m app.seed
+   ```
+   or via the API directly (`recipient_name` is required — it's who the email greeting is addressed to):
    ```bash
    curl -X POST http://localhost:8000/users/ \
      -H "Content-Type: application/json" \
      -d '{
        "name": "Your Name",
        "email_to": "pm@company.com",
+       "recipient_name": "PM Name",
        "github_username": "your-github-username",
        "github_token": "ghp_xxxxx",
        "repos": ["your-org/your-repo"],
@@ -95,7 +108,7 @@ sprintlog/
      }'
    ```
 
-5. Trigger a report manually (for testing):
+5. Trigger a report manually (for testing — only sends an email if the configured repo has commits by that GitHub user today):
    ```bash
    curl -X POST http://localhost:8000/reports/trigger/1
    ```

@@ -1,6 +1,6 @@
 """
 Seed script — creates the initial user for Sprintlog.
-Run this once after setting up the database: python seed.py
+Run this once after setting up the database, from the repo root: python -m app.seed
 """
 from app.config import settings
 from app.database import SessionLocal, Base, engine
