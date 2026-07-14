@@ -30,7 +30,7 @@ def run_report_for_user(user_id: int):
         subject, body = render_email(
             team_name=user.team_name,
             recipient_name=user.recipient_name,
-            date=datetime.now().strftime("%-d-%-m-%Y"),
+            date="{d.day}-{d.month}-{d.year}".format(d=datetime.now()),
             developer_name=user.name,
             completed_tasks=summary,
             start_time=user.default_start_time,

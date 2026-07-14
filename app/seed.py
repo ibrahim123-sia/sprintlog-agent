@@ -24,7 +24,7 @@ def seed_user():
             recipient_name="Aryan",
             github_username=settings.github_username,
             github_token=settings.github_token,
-            repos=["ibrahim123-sia/sprintlog"], # apne repos daal do
+            repos=["ibrahim123-sia/sprintlog-agent"], # apne repos daal do
             schedule_hour=18,
             schedule_minute=0,
             timezone="Asia/Karachi",

@@ -4,7 +4,7 @@ from app.config import settings
 
 llm = ChatGoogleGenerativeAI(
     google_api_key=settings.gemini_api_key,
-    model="gemini-2.5-flash"
+    model="gemini-flash-latest"
 )
 
 TONE_GUIDES = {
