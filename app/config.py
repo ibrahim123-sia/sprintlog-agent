@@ -2,7 +2,7 @@ from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
     database_url: str
-    google_api_key: str
+    gemini_api_key: str
     smtp_host: str
     smtp_port: int
     smtp_user: str
